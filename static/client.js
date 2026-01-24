@@ -167,7 +167,7 @@ function appendMessage(cls, content, showAction = false) {
             htmlContent += `
                 <details style="margin-bottom: 8px; border: 1px solid #e0e0e0; border-radius: 6px; background: #fff;">
                     <summary style="cursor: pointer; padding: 6px; font-size: 10px; color: #999; font-weight: 600; list-style: none;">
-                        🧠 Cadena de pensamiento
+                        Cadena de pensamiento
                     </summary>
                     <div style="padding: 8px; font-size: 10px; color: #666; font-family: monospace; white-space: pre-wrap; background: #f9f9f9; border-top: 1px solid #eee;">
                         ${content.thought.replace(/</g, "&lt;")}
@@ -187,7 +187,7 @@ function appendMessage(cls, content, showAction = false) {
             htmlContent += `
                 <details style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 5px;">
                     <summary style="cursor: pointer; font-size: 11px; color: #D35400; font-weight: 600;">
-                        📚 Referencias Consultadas
+                        Referencias Consultadas
                     </summary>
                     <div style="margin-top: 5px; font-size: 10px; color: #555; line-height: 1.4; padding: 5px; background: #FFF0E6; border-radius: 4px;">
                         ${content.sources.replace(/\n/g, "<br>")}
@@ -202,7 +202,7 @@ function appendMessage(cls, content, showAction = false) {
             htmlContent += `
                 <div style="margin-top:10px;"></div>
                 <div class="insert-btn" onclick="insertText('${safeText}')">
-                    📄 Pegar en Tesis
+                    Pegar en Word
                 </div>
             `;
         }
@@ -239,4 +239,5 @@ async function insertText(encodedText) {
         selection.insertText(textToInsert, Word.InsertLocation.replace);
         await context.sync();
     });
+
 }
