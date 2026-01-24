@@ -6,11 +6,9 @@ import sys
 import subprocess
 import time
 
-# ==========================================
-#   CONFIGURACIÓN DESINSTALADOR TITI AI
-# ==========================================
+
 INSTALL_DIR_NAME = "TITIAgent"
-SHORTCUT_NAME = "TITI Agent.lnk" # Asegúrate que coincida con el instalador
+SHORTCUT_NAME = "TITI Agent.lnk" 
 
 def is_admin():
     try:
@@ -28,8 +26,6 @@ def kill_running_process():
     Es un intento básico para liberar los archivos antes de borrar.
     """
     print(":) Verificando si el agente está en ejecución...")
-    # No podemos matar todo "python.exe" porque afectaríamos otros programas.
-    # Simplemente advertimos o intentamos un cierre suave si detectamos bloqueo.
     pass 
 
 def clean_loopback_exemption():
@@ -44,7 +40,6 @@ def clean_loopback_exemption():
     
     for app_id in app_ids:
         try:
-            # El flag -d elimina la regla
             cmd = ["CheckNetIsolation.exe", "LoopbackExempt", "-d", f"-n={app_id}"]
             subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except:
@@ -93,7 +88,6 @@ def remove_installation_files():
         print("   Espere un momento, borrando entorno virtual y modelos...")
         
         try:
-            # Función para manejar archivos de solo lectura (común en git o venv)
             def remove_readonly(func, path, excinfo):
                 os.chmod(path, 0o777)
                 func(path)
@@ -149,4 +143,5 @@ if __name__ == "__main__":
         print("Solicitando permisos de administrador para limpiar el sistema...")
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
     else:
+
         main()
