@@ -1,0 +1,20 @@
+--extra-index-url https://download.pytorch.org/whl/cu121
+fastapi
+uvicorn
+python-multipart
+huggingface_hub==0.31.4
+torch==2.5.1
+torchvision==0.20.1
+torchaudio==2.5.1
+transformers==4.53.0
+sentence-transformers==3.4.1
+ctransformers[cuda]
+accelerate
+bitsandbytes
+accelerate==1.8.1
+pywin32
+winshell
+ddgs
+cryptography
+
+

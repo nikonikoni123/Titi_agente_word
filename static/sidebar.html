@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>TITI AI</title>
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Identidad TITI CABECIBLANCO */
+            --primary: #D35400;       /* Terracota/Naranja Óxido */
+            --primary-light: #FDEBD0; /* Crema suave */
+            --dark: #2C3E50;          /* Gris Oscuro */
+            --bg-chat: #F8F9FA;       /* Fondo */
+            --white: #FFFFFF;
+            --green: #27AE60;         /* Bosque */
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        * { box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0; 
+            padding: 0; 
+            background-color: var(--bg-chat); 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden;
+        }
+
+        /* --- HEADER CON PERSONALIDAD --- */
+        .header {
+            background: var(--white);
+            padding: 12px 20px;
+            border-bottom: 1px solid #EAECEF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar-circle {
+            width: 32px;
+            height: 32px;
+            background: var(--dark);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            border: 2px solid var(--white);
+            box-shadow: 0 0 0 2px var(--primary); /* Cresta visual */
+        }
+
+        .brand-text h1 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--dark);
+            letter-spacing: -0.5px;
+        }
+
+        .brand-text span {
+            font-size: 10px;
+            color: var(--green);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* --- CHAT AREA --- */
+        #chat-container {
+            flex: 1;
+            padding: 20px 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            max-width: 88%;
+            padding: 12px 16px;
+            font-size: 13.5px;
+            line-height: 1.5;
+            position: relative;
+            word-wrap: break-word;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        /* TITI (Agente) */
+        .msg-agent {
+            align-self: flex-start;
+            background: var(--white);
+            color: #333;
+            border-radius: 0 12px 12px 12px;
+            border-left: 3px solid var(--primary); /* Detalle naranja */
+        }
+        
+        .msg-agent::before {
+            content: "🐵 Titi";
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        /* USUARIO */
+        .msg-user {
+            align-self: flex-end;
+            background: var(--primary); /* Color Terracota */
+            color: white;
+            border-radius: 12px 0 12px 12px;
+        }
+
+        .insert-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+            padding: 6px 12px;
+            background: #FFF0E6; /* Naranja muy suave */
+            color: var(--primary);
+            border: 1px solid #F5CBA7;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .insert-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* --- INPUT AREA --- */
+        .input-wrapper {
+            background: var(--white);
+            padding: 15px;
+            border-top: 1px solid #EAECEF;
+        }
+
+        .context-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #666;
+            background: #F2F4F6;
+            padding: 4px 10px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        .context-pill.active {
+            background: #E8F8F5; /* Verde muy suave */
+            color: var(--green);
+            border: 1px solid #A9DFBF;
+        }
+        .dot { width: 6px; height: 6px; background: #ccc; border-radius: 50%; }
+        .active .dot { background: var(--green); box-shadow: 0 0 4px var(--green); }
+
+        .input-box {
+            display: flex;
+            gap: 10px;
+            background: #F8F9FA;
+            border: 1px solid #E0E0E0;
+            border-radius: 24px;
+            padding: 5px 5px 5px 15px;
+            transition: border-color 0.2s;
+        }
+        
+        .input-box:focus-within {
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(211, 84, 0, 0.1);
+        }
+
+        textarea {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 8px 0;
+            font-family: inherit;
+            font-size: 13px;
+            resize: none;
+            height: 24px; /* Una línea inicial */
+            max-height: 80px;
+            outline: none;
+        }
+
+        button#send-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s;
+        }
+        button#send-btn:hover { background: #BA4A00; transform: scale(1.05); }
+        button#send-btn:disabled { background: #EDBB99; cursor: not-allowed; transform: none; }
+
+        /* Loader Ágil */
+        .loader-text {
+            font-size: 11px;
+            color: var(--primary);
+            margin-left: 10px;
+            margin-top: 5px;
+            font-weight: 500;
+            display: none;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+        
+        /* Scrollbar bonito */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #D6DBDF; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #AEB6BF; }
+    </style>
+</head>
+<body>
+
+    <!-- Header Branding -->
+    <div class="header">
+        <div class="brand">
+            <div class="avatar-circle">🐒</div>
+            <div class="brand-text">
+                <h1>TITI AI</h1>
+                <span>Online • Local GPU</span>
+            </div>
+        </div>
+        <button onclick="location.reload()" style="background:none; border:none; color:#999; cursor:pointer;" title="Reiniciar chat">↻</button>
+    </div>
+
+    <!-- Chat -->
+    <div id="chat-container">
+        <!-- Mensaje de bienvenida -->
+        <div class="message msg-agent">
+            ¡Hola! Soy <b>Titi</b>, tu asistente de investigación.<br><br>
+            Como un buen tití, soy rápido y curioso. Selecciona un texto en tu tesis y dime qué necesitas (refutar, expandir, bibliografía).
+        </div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-wrapper">
+        <div id="context-pill" class="context-pill">
+            <div class="dot"></div>
+            <span id="context-text">Esperando selección...</span>
+        </div>
+
+        <div class="input-box">
+            <textarea id="user-input" placeholder="Dile a Titi qué hacer..." oninput="autoResize(this)" onkeydown="handleEnter(event)"></textarea>
+            <button id="send-btn" onclick="sendMessage()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+        </div>
+        <div id="loader" class="loader-text">🐒 Titi está saltando entre papers...</div>
+    </div>
+
+    <script src="client.js"></script>
+    <script>
+        function autoResize(el) {
+            el.style.height = '24px'; // Reset
+            el.style.height = Math.min(el.scrollHeight, 80) + 'px';
+        }
+    </script>
+</body>
+</html>
