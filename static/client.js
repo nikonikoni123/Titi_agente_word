@@ -5,7 +5,7 @@ const SERVER_URL = "https://127.0.0.1:8010";
 Office.onReady((info) => {
     if (info.host === Office.HostType.Word) {
         // Mensaje de diagnóstico inicial
-        console.log("🐵 Titi Conectado. Host: Word.");
+        console.log("Titi Conectado.");
         
         // 1. INTENTAR REGISTRAR EVENTO (Método rápido)
         try {
@@ -241,3 +241,4 @@ async function insertText(encodedText) {
     });
 
 }
+
