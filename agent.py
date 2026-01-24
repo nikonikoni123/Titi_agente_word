@@ -90,7 +90,7 @@ Query:<end_of_turn><start_of_turn>model"""
                 return instruction if instruction else "science research paper"
             
         # BÚSQUEDA CONTEXTUAL
-        context = selection[:600]
+        context = selection[:2600]
         prompt = f"""<start_of_turn>user
 Genera una búsqueda corta para Google Scholar.
 Texto base: "{context}"
@@ -202,3 +202,4 @@ Respuesta:<end_of_turn>
             "answer": response,
             "sources": context_data
         }
+
