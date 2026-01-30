@@ -2,9 +2,11 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from sentence_transformers import SentenceTransformer
 from ddgs import DDGS
+from history import HistoryManager
 
 MODEL_ID = "NicolasRodriguez/manaba_gemma_2_2b" 
 MAX_DOCS = 4
+MAX_HISTORY_TURNS = 6
 
 class LLMEngine:
     """
@@ -60,13 +62,14 @@ class AgentOrchestrator:
     """
     def __init__(self):
         self.llm = None 
+        self.history_manager = HistoryManager()
 
     def get_llm(self):
         if self.llm is None:
             self.llm = LLMEngine()
         return self.llm
 
-    def _generate_smart_query(self, selection, instruction):
+    def _generate_smart_query(self, selection, instruction, history_context=""):
         """
         Lógica Determinista: Si no hay selección, usa la instrucción directa.
         Esto evita que el modelo pequeño alucine queries malas.
@@ -79,6 +82,7 @@ class AgentOrchestrator:
         if not selection:
             prompt = f"""<start_of_turn>user
 Genera una búsqueda corta para Google Scholar.
+Historial reciente: {history_context}
 Texto base: "{instruction}"
 Solo la query, nada más.
 Query:<end_of_turn><start_of_turn>model"""
@@ -93,6 +97,7 @@ Query:<end_of_turn><start_of_turn>model"""
         context = selection[:2600]
         prompt = f"""<start_of_turn>user
 Genera una búsqueda corta para Google Scholar.
+Historial reciente: {history_context}
 Texto base: "{context}"
 Intención: "{instruction}"
 Solo la query, nada más.
@@ -159,15 +164,43 @@ Query:<end_of_turn><start_of_turn>model"""
             return "No encontré papers relevantes para esta consulta específica."
             
         return "\n".join(context)
+    
+    def _format_history(self, messages):
+        """
+        Formatea el historial de mensajes para incluir en el prompt.
+        """
+        recent = messages[-MAX_HISTORY_TURNS:]
+        formatted = ""
+        for turn in recent:
+            role = "user" if turn['role'] == 'user' else "model"
+            formatted += f"<start_of_turn>{role}\n{turn['content']}<end_of_turn>\n"
+        return formatted
 
-    def process_titi_task(self, selection, instruction):
+    def process_titi_task(self, selection, instruction, conversation_id=None):
         print(":) Titi procesando tarea...")
+
+        if not conversation_id:
+            conversation_id, data = self.history_manager.create_conversation()
+        else:
+            data = self.history_manager.load_conversation(conversation_id)
+            if not data:
+                conversation_id, data = self.history_manager.create_conversation()
+        
+        # Agregar el nuevo mensaje al historial
+        self.history_manager.add_message(conversation_id,"user", f"{selection}\n\n{instruction}".strip())
+
+        # ultimos 2 mensajes para contexto de busqueda
+        history_text = " ".join([m["content"] for m in data["messages"][-2:]])
+
         
         # Titi piensa la búsqueda
-        search_query = self._generate_smart_query(selection, instruction)
+        search_query = self._generate_smart_query(selection, instruction, history_text)
         
         # Titi busca en la red
         context_data = self._search_web(search_query)
+
+        # Guardar la evidencia en el historial
+        history_block = self._format_history(data["messages"][:-1])
 
         # Prompt final Titi
         final_prompt = f"""<start_of_turn>user
@@ -176,6 +209,9 @@ Tu misión es ayudar a redactar documentos con altísimo rigor académico pero s
 
 [CONTEXTO DEL USUARIO]
 "{selection}"
+
+[HISTORIAL DE CHAT]
+{history_block}
 
 [ORDEN DEL USUARIO]
 "{instruction}"
@@ -196,10 +232,23 @@ Respuesta:<end_of_turn>
 """
         # Titi genera la respuesta final
         response = self.get_llm().generate(final_prompt, max_tokens=2000)
+
+        # Guardar la respuesta en el historial
+        self.history_manager.add_message(conversation_id, "assistant", response, sources=context_data, thought=final_prompt)
         
         return {
+            "conversation_id": conversation_id,
             "thought": final_prompt,
             "answer": response,
             "sources": context_data
         }
+
+    def get_history_list(self):
+        return self.history_manager.list_conversations()
+    
+    def delete_history(self, cid):
+        return self.history_manager.delete_conversation(cid)
+    
+    def get_conversation_details(self, cid):
+        return self.history_manager.load_conversation(cid)
 

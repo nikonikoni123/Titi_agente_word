@@ -23,6 +23,7 @@ REQUIRED_FILES = {
     "manifest.xml": ".",
     "cert.pem":".",
     "key.pem":".",
+    "history.py":".",
     "generar_certificados.py": ".",
     "sidebar.html": "static",
     "client.js": "static"
