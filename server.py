@@ -4,7 +4,14 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from agent import AgentOrchestrator
+from typing import Optional 
 import os
+import sys
+import asyncio
+
+
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 print("""
 ========================================
@@ -39,11 +46,18 @@ print(":) MODELO CARGADO. ABRIENDO PUERTOS")
 class TitiRequest(BaseModel):
     selection: str
     instruction: str
+    conversation_id: Optional[str] = None
+    mode: str = "academic"
 
 @app.post("/titi")
 async def titi_endpoint(data: TitiRequest):
     try:
-        result = orchestrator.process_titi_task(data.selection, data.instruction)
+        result = orchestrator.process_titi_task(
+            data.selection, 
+            data.instruction,
+            conversation_id=data.conversation_id,
+            mode=data.mode
+        )
         return result 
     except Exception as e:
         print(f"Error: {e}")

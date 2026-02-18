@@ -252,13 +252,13 @@ def main():
         create_shortcut_powershell(dest, desk)
         
         print("\n" + "="*40)
-        print(" ✅ INSTALACIÓN FINALIZADA")
+        print(" INSTALACIÓN FINALIZADA")
         print("="*40)
         print(f"Carpeta: {dest}")
         print(f"Log: {os.path.abspath(LOG_FILE)}")
         
     except Exception as e:
-        print(f"\n❌ ERROR FATAL: {e}")
+        print(f"\nERROR FATAL: {e}")
         logging.critical("Fallo total", exc_info=True)
         
     input("\nPresiona ENTER para salir.")

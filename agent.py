@@ -5,7 +5,7 @@ from ddgs import DDGS
 from history import HistoryManager
 
 MODEL_ID = "NicolasRodriguez/manaba_gemma_2_2b" 
-MAX_DOCS = 4
+MAX_DOCS = 12
 MAX_HISTORY_TURNS = 6
 
 class LLMEngine:
@@ -69,7 +69,7 @@ class AgentOrchestrator:
             self.llm = LLMEngine()
         return self.llm
 
-    def _generate_smart_query(self, selection, instruction, history_context=""):
+    def _generate_smart_query(self, selection, instruction, history_context="",search_type='academic'):
         """
         Lógica Determinista: Si no hay selección, usa la instrucción directa.
         Esto evita que el modelo pequeño alucine queries malas.
@@ -78,14 +78,21 @@ class AgentOrchestrator:
         instruction = instruction.strip()
         
         # BÚSQUEDA DIRECTA
-
-        if not selection:
+        if search_type == 'academic':
             prompt = f"""<start_of_turn>user
 Genera una búsqueda corta para Google Scholar.
 Historial reciente: {history_context}
 Texto base: "{instruction}"
 Solo la query, nada más.
 Query:<end_of_turn><start_of_turn>model"""
+        else:
+            prompt = f"""<start_of_turn>user
+Genera una búsqueda corta para jurisprudencia en derecho colombiano y redacción jurídica.
+Historial reciente: {history_context}
+Texto base: "{instruction}"
+Solo la query en español, nada más.
+Query:<end_of_turn><start_of_turn>model"""
+        if not selection:
             try:
                 query = self.get_llm().generate(prompt, max_tokens=50)
                 print(f"  Query Generada (LLM): {query}", flush=True)
@@ -109,6 +116,43 @@ Query:<end_of_turn><start_of_turn>model"""
             return f"{query}"
         except:
             return "science research paper"
+
+    
+    def _search_legal(self, query):
+        """
+        Búsqueda especializada en SUIN-JURISCOL y Cortes Colombianas.
+        """
+        print(f":) Titi Buscando (Modo JURÍDICO): {query}")
+        context = []
+        try:
+            ddgs = DDGS()
+            # Filtro estricto para SUIN y Altas Cortes
+            legal_filters = 'site:suin-juriscol.gov.co OR site:corteconstitucional.gov.co OR site:funcionpublica.gov.co'
+            full_query = f"{query} {legal_filters}"
+            
+            results = list(ddgs.text(full_query, max_results=4))
+            
+            for i, r in enumerate(results):
+                title = r.get('title', 'Documento Jurídico')
+                body = r.get('body', 'Sin resumen.')[:600]
+                url = r.get('href', 'N/A')
+                
+                entry = (
+                    f"--- FUENTE JURÍDICA COLOMBIANA [{i+1}] ---\n"
+                    f"TÍTULO: {title}\n"
+                    f"FUENTE: {url}\n"
+                    f"EXTRACTO: {body}...\n"
+                )
+                context.append(entry)
+                
+        except Exception as e:
+            print(f"Error búsqueda legal: {e}")
+            return "No pude conectar con SUIN-JURISCOL."
+            
+        if not context:
+            return "No encontré jurisprudencia o normas exactas en SUIN para esto."
+            
+        return "\n".join(context)
 
 
     def _search_web(self, query):
@@ -176,9 +220,8 @@ Query:<end_of_turn><start_of_turn>model"""
             formatted += f"<start_of_turn>{role}\n{turn['content']}<end_of_turn>\n"
         return formatted
 
-    def process_titi_task(self, selection, instruction, conversation_id=None):
+    def process_titi_task(self, selection, instruction, conversation_id=None, mode='academic'):
         print(":) Titi procesando tarea...")
-
         if not conversation_id:
             conversation_id, data = self.history_manager.create_conversation()
         else:
@@ -192,18 +235,45 @@ Query:<end_of_turn><start_of_turn>model"""
         # ultimos 2 mensajes para contexto de busqueda
         history_text = " ".join([m["content"] for m in data["messages"][-2:]])
 
-        
         # Titi piensa la búsqueda
-        search_query = self._generate_smart_query(selection, instruction, history_text)
+        search_query = self._generate_smart_query(selection, instruction, history_text, search_type=mode)
         
         # Titi busca en la red
-        context_data = self._search_web(search_query)
+        if mode != 'academic':
+            context_data = self._search_legal(search_query)
+            history_block = self._format_history(data["messages"][:-1])
+            # promt
+            final_prompt = f"""<start_of_turn>user
+Rol: Eres "Titi", un abogado experto en derecho colombiano y redacción jurídica.
+Tu fuente de verdad es SUIN-JURISCOL.
 
-        # Guardar la evidencia en el historial
-        history_block = self._format_history(data["messages"][:-1])
+[CONSULTA]
+"{instruction}"
 
-        # Prompt final Titi
-        final_prompt = f"""<start_of_turn>user
+[CONTEXTO DEL DOCUMENTO]
+"{selection}"
+
+[JURISPRUDENCIA ENCONTRADA]
+{context_data}
+
+[INSTRUCCIONES]
+1. Analiza la consulta basándote en la normativa encontrada.
+2. Cita los documentos juridicos consjutados específicos, ejemplo: Sentencias (T-123/20).
+3. Usa terminología jurídica adecuada (exequibilidad, ratio decidendi, cosa juzgada, etc.).
+4. Sé conciso y argumentativo.
+5. Devuelve el texto listo y analizado.
+
+Respuesta Jurídica:<end_of_turn>
+<start_of_turn>model"""
+        
+        else:
+            context_data = self._search_web(search_query)
+
+            # Guardar la evidencia en el historial
+            history_block = self._format_history(data["messages"][:-1])
+
+            # Prompt final Titi
+            final_prompt = f"""<start_of_turn>user
 Rol: Eres "Titi", un asistente de investigación científica avanzado. Tu nombre rinde homenaje al tití cabeciblanco.
 Tu misión es ayudar a redactar documentos con altísimo rigor académico pero siendo directo y útil.
 

@@ -109,7 +109,7 @@
         }
         
         .msg-agent::before {
-            content: "🐵 Titi";
+            content: "Titi";
             display: block;
             font-size: 10px;
             font-weight: 700;
@@ -117,10 +117,32 @@
             margin-bottom: 4px;
         }
 
+        .mode-btn {
+            flex: 1;
+            padding: 6px;
+            border: 1px solid #ddd;
+            background: #f8f9fa;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.2s;
+        }
+        .mode-btn.active {
+            background: #D35400; 
+            color: white;
+            border-color: #D35400;
+        }
+        .mode-btn.active#btn-mode-legal {
+            background: #2C3E50; 
+            border-color: #2C3E50;
+        }
+
         /* USUARIO */
         .msg-user {
             align-self: flex-end;
-            background: var(--primary); /* Color Terracota */
+            background: var(--primary); 
             color: white;
             border-radius: 12px 0 12px 12px;
         }
@@ -131,7 +153,7 @@
             gap: 5px;
             margin-top: 10px;
             padding: 6px 12px;
-            background: #FFF0E6; /* Naranja muy suave */
+            background: #FFF0E6; 
             color: var(--primary);
             border: 1px solid #F5CBA7;
             border-radius: 20px;
@@ -267,20 +289,24 @@
             <div class="dot"></div>
             <span id="context-text">Esperando selección...</span>
         </div>
+        <div style="display:flex; gap:10px; margin-bottom:8px;">
+            <button id="btn-mode-academic" class="mode-btn active" onclick="setMode('academic')">🎓 Académico</button>
+            <button id="btn-mode-legal" class="mode-btn" onclick="setMode('legal')">⚖️ Jurídico (SUIN)</button>
+        </div>
 
         <div class="input-box">
-            <textarea id="user-input" placeholder="Dile a Titi qué hacer..." oninput="autoResize(this)" onkeydown="handleEnter(event)"></textarea>
+            <textarea id="user-input" placeholder="Escribe tu instrucción..." oninput="autoResize(this)" onkeydown="handleEnter(event)"></textarea>
             <button id="send-btn" onclick="sendMessage()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
             </button>
         </div>
-        <div id="loader" class="loader-text">🐒 Titi está saltando entre papers...</div>
+        <div id="loader" class="loader-text">Titi está investigando...</div>
     </div>
 
     <script src="client.js"></script>
     <script>
         function autoResize(el) {
-            el.style.height = '24px'; // Reset
+            el.style.height = '24px'; 
             el.style.height = Math.min(el.scrollHeight, 80) + 'px';
         }
     </script>

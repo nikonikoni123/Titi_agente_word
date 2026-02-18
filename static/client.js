@@ -1,5 +1,6 @@
 let lastSelection = "";
 let currentConversationId = null;
+let currentMode = "academic";
 const SERVER_URL = "https://127.0.0.1:8010"; 
 
 Office.onReady((info) => {
@@ -66,13 +67,22 @@ async function loadHistoryList() {
 
         list.forEach(item => {
             const div = document.createElement('div');
-            div.style.cssText = "padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 12px;";
-            div.innerHTML = `
+            div.style.cssText = "padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 12px; display: flex; justify-content: space-between; align-items: center;";
+            const textDiv = document.createElement('div');
+            textDiv.innerHTML = `
                 <div style="font-weight:bold; color:#333;">${item.title}</div>
                 <div style="color:#999; font-size:10px;">${new Date(item.updated_at).toLocaleDateString()}</div>
-                <button onclick="deleteChat(event, '${item.id}')" style="float:right; border:none; background:none; color:red; cursor:pointer;">Delete</button>
             `;
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerText = "Delete";
+            deleteBtn.style.cssText = "border:none; background:none; color:red; cursor:pointer;";
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation(); 
+                deleteChat(e, item.id);
+            };
             div.onclick = () => loadConversation(item.id);
+            div.appendChild(textDiv);
+            div.appendChild(deleteBtn);
             container.appendChild(div);
         });
     } catch(e) { console.error("Error cargando historial", e); }
@@ -93,6 +103,19 @@ async function startNewChat() {
         currentConversationId = data.conversation_id;
     } catch(e) {}
 }
+
+function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('btn-mode-academic').className = mode === 'academic' ? 'mode-btn active' : 'mode-btn';
+    document.getElementById('btn-mode-legal').className = mode === 'legal' ? 'mode-btn active' : 'mode-btn';
+    const input = document.getElementById('user-input');
+    if(mode === 'legal') {
+        input.placeholder = "Ej: Analiza la Sentencia T-025...";
+    } else {
+        input.placeholder = "Dile a Titi qué investigar...";
+    }
+}
+
 
 async function loadConversation(id) {
     try {
@@ -151,23 +174,24 @@ async function sendMessage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
                 selection: contextToSend, 
-                instruction: text || "Analiza esto.",
-                conversation_id: currentConversationId 
+                instruction: text || (currentMode === 'legal' ? "Analiza jurídicamente este texto." : "Analiza esto."),
+                conversation_id: currentConversationId,
+                mode: currentMode // <--- AQUÍ ENVIAMOS EL NUEVO PARÁMETRO
             })
         });
 
         const data = await response.json();
-        
         if (data.conversation_id) currentConversationId = data.conversation_id;
-        
         appendMessage("msg-agent", data, true);
 
     } catch (error) {
-        appendMessage("msg-agent", `🙈 Error: ${error.message}`);
+        appendMessage("msg-agent", ` Error: ${error.message}`);
     } finally {
         setLoading(false);
     }
 }
+
+
 function onSelectionChange(eventArgs) { checkSelectionContext(); }
 async function checkSelectionContext() {
     try {
