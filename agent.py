@@ -127,7 +127,7 @@ Query:<end_of_turn><start_of_turn>model"""
         try:
             ddgs = DDGS()
             # Filtro estricto para SUIN y Altas Cortes
-            legal_filters = 'site:suin-juriscol.gov.co OR site:corteconstitucional.gov.co OR site:funcionpublica.gov.co'
+            legal_filters = '(site:suin-juriscol.gov.co OR site:corteconstitucional.gov.co OR site:cortesuprema.gov.co OR site:consejodeestado.gov.co OR site:funcionpublica.gov.co)'
             full_query = f"{query} {legal_filters}"
             
             results = list(ddgs.text(full_query, max_results=4))
@@ -170,7 +170,7 @@ Query:<end_of_turn><start_of_turn>model"""
         try:
             ddgs = DDGS()
             
-            academic_filters = '(filetype:pdf "references") OR site:edu OR site:sciencedirect.com OR site:arxiv.org'
+            academic_filters = 'filetype:pdf -site:academia.edu -site:researchgate.net (site:edu.co OR site:sciencedirect.com OR site:arxiv.org OR site:scielo.org OR site:redalyc.org OR site:dialnet.unirioja.es)'
             full_query = f"{query} {academic_filters}"
             
             # Búsqueda estricta
@@ -179,7 +179,7 @@ Query:<end_of_turn><start_of_turn>model"""
             # Si la búsqueda estricta falla, relajamos un poco
             if not results:
                 print(":/ Sin resultados estrictos. Relajando filtros...")
-                fallback_query = f"{query} research paper filetype:pdf"
+                fallback_query = f"{query} research paper filetype:pdf -site:academia.edu -site:researchgate.net"
                 results = list(ddgs.text(fallback_query, max_results=MAX_DOCS))
 
             # Procesamiento de resultados
