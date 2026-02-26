@@ -1,7 +1,7 @@
 # Titi - Asistente de Investigación Académica (Copilot Local)
 ### Tu compañero de tesis en Microsoft Word. Rápido, Local y Riguroso.
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue) ![Identity](https://img.shields.io/badge/Identity-Titi_Cabeciblanco-brown) ![Platform](https://img.shields.io/badge/Office-Word_Copilot-blue) ![GPU](https://img.shields.io/badge/GPU-NVIDIA_Required-red)
+![Version](https://img.shields.io/badge/version-0.7.2-blue) ![Identity](https://img.shields.io/badge/Identity-Titi_Cabeciblanco-brown) ![Platform](https://img.shields.io/badge/Office-Word_Copilot-blue) ![GPU](https://img.shields.io/badge/GPU-NVIDIA_Required-red)
 
 ## Identidad y Propósito
 
