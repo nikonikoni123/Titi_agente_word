@@ -5,10 +5,15 @@ import uuid
 from datetime import datetime
 
 class HistoryManager:
-    def __init__(self, storage_dir="conversations"):
-        self.storage_dir = storage_dir
+    def __init__(self, storage_dir="data/conversations"):
+        if storage_dir is None:
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            self.storage_dir = os.path.join(base_dir, "data", "conversations")
+        else:
+            self.storage_dir = storage_dir
+            
         if not os.path.exists(self.storage_dir):
-            os.makedirs(self.storage_dir)
+            os.makedirs(self.storage_dir, exist_ok=True)
 
     def _get_filepath(self, conversation_id):
         """
