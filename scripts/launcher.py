@@ -4,6 +4,11 @@ import subprocess
 import time
 import traceback
 import ctypes
+import tkinter as tk
+from tkinter import ttk, messagebox
+import urllib.request
+import urllib.error
+import ssl
 
 try:
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__)) 
@@ -22,11 +27,6 @@ except Exception as e:
     ctypes.windll.user32.MessageBoxW(0, f"Error iniciando rutas:\n{e}", "Error Fatal Titi", 0x10)
     sys.exit(1)
 
-import tkinter as tk
-from tkinter import ttk, messagebox
-import urllib.request
-import urllib.error
-import ssl
 
 ctx = ssl.create_default_context()
 ctx.check_hostname = False
@@ -101,7 +101,7 @@ def on_closing():
 def set_ui_state(state):
     if state == "STOPPED":
         lbl_status.config(text="Estado: DETENIDO", foreground="red")
-        btn_start.config(state="normal", text="▶ Iniciar Agente")
+        btn_start.config(state="normal", text=" Iniciar Agente")
         btn_stop.config(state="disabled")
         btn_open_word.config(state="disabled")
     elif state == "LOADING":
@@ -116,37 +116,77 @@ def set_ui_state(state):
 
 try:
     root = tk.Tk()
-    root.title("Titi AI Local")
-    root.geometry("380x250")
+    root.title("Titi AI")
+    root.geometry("400x320")
+    
+    BG_DARK = "#12142D"
+    BG_CARD = "#1C1F43"
+    ACCENT = "#FF623D"
+    TEXT_MAIN = "#FFFFFF"
+    TEXT_MUTED = "#8A8DAB"
+
+    root.configure(bg=BG_DARK)
+    root.resizable(False, False)
+    
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
-    x = (screen_width/2) - (380/2)
-    y = (screen_height/2) - (250/2)
-    root.geometry('%dx%d+%d+%d' % (380, 250, x, y))
+    x = int((screen_width/2) - (400/2))
+    y = int((screen_height/2) - (320/2))
+    root.geometry(f'400x320+{x}+{y}')
 
     style = ttk.Style()
     style.theme_use('clam')
     
-    main_frame = ttk.Frame(root, padding="20")
-    main_frame.pack(fill=tk.BOTH, expand=True)
+    style.configure('Start.TButton', font=("Segoe UI", 11, "bold"), background=ACCENT, foreground=TEXT_MAIN, borderwidth=0, padding=12)
+    style.map('Start.TButton', background=[('active', '#E55837'), ('disabled', '#3A3347')], foreground=[('disabled', '#706B7D')])
+
+    style.configure('Stop.TButton', font=("Segoe UI", 10, "bold"), background=BG_CARD, foreground=TEXT_MAIN, borderwidth=0, padding=10)
+    style.map('Stop.TButton', background=[('active', '#2A2D5C'), ('disabled', '#151733')], foreground=[('disabled', '#4B4F73')])
+
+    top_frame = tk.Frame(root, bg=BG_DARK)
+    top_frame.pack(fill=tk.X, pady=(30, 10))
     
-    ttk.Label(main_frame, text="Titi AI Manager", font=("Arial", 14, "bold")).pack(pady=5)
-    lbl_status = ttk.Label(main_frame, text="Estado: DETENIDO", foreground="red")
-    lbl_status.pack(pady=10)
+    tk.Label(top_frame, text="Titi Engine", font=("Segoe UI", 24, "bold"), bg=BG_DARK, fg=TEXT_MAIN).pack()
     
-    btn_start = ttk.Button(main_frame, text="▶ Iniciar Agente", command=start_server)
-    btn_start.pack(fill=tk.X, pady=5)
+    lbl_status = tk.Label(top_frame, text="S I S T E M A   D E T E N I D O", font=("Segoe UI", 9, "bold"), bg=BG_DARK, fg="#FF4B4B")
+    lbl_status.pack(pady=5)
+
+    tk.Frame(root, bg=ACCENT, height=2).pack(fill=tk.X, padx=40, pady=10)
+
+    bottom_frame = tk.Frame(root, bg=BG_DARK)
+    bottom_frame.pack(fill=tk.BOTH, expand=True, padx=40, pady=10)
+
+    btn_start = ttk.Button(bottom_frame, text="Iniciar Motor Local", style='Start.TButton', command=start_server)
+    btn_start.pack(fill=tk.X, pady=(0, 12))
     
-    btn_stop = ttk.Button(main_frame, text="⏹ Detener", command=stop_server, state="disabled")
-    btn_stop.pack(fill=tk.X, pady=5)
+    btn_container = tk.Frame(bottom_frame, bg=BG_DARK)
+    btn_container.pack(fill=tk.X)
     
-    ttk.Separator(main_frame, orient='horizontal').pack(fill=tk.X, pady=10)
+    btn_stop = ttk.Button(btn_container, text="Detener", style='Stop.TButton', command=stop_server, state="disabled")
+    btn_stop.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
     
-    btn_open_word = ttk.Button(main_frame, text="Abrir Word", command=open_word, state="disabled")
-    btn_open_word.pack(fill=tk.X)
+    btn_open_word = ttk.Button(btn_container, text="Abrir Word", style='Stop.TButton', command=open_word, state="disabled")
+    btn_open_word.pack(side=tk.RIGHT, fill=tk.X, expand=True, padx=(5, 0))
+
+    def set_ui_state(state):
+        if state == "STOPPED":
+            lbl_status.config(text="● SISTEMA DETENIDO", fg="#FF4B4B") 
+            btn_start.config(state="normal", text="Iniciar Motor Local")
+            btn_stop.config(state="disabled")
+            btn_open_word.config(state="disabled")
+        elif state == "LOADING":
+            lbl_status.config(text="CARGANDO MODELO...", fg="#FDE047")
+            btn_start.config(state="disabled", text="Asignando VRAM...")
+            btn_stop.config(state="normal")
+        elif state == "READY":
+            lbl_status.config(text="● ONLINE", fg="#10B981") 
+            btn_start.config(state="disabled", text="IA Activa")
+            btn_stop.config(state="normal")
+            btn_open_word.config(state="normal")
 
     root.protocol("WM_DELETE_WINDOW", on_closing)
     root.mainloop()
+
 
 except Exception as e:
     with open(os.path.join(SCRIPT_DIR, "launcher_error.txt"), "w") as f:
